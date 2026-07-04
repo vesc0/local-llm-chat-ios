@@ -25,6 +25,10 @@ struct SidebarView: View {
                             Text(conv.title)
                                 .lineLimit(1)
                             Spacer()
+                            if viewModel.generatingConversationIds.contains(conv.id) {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
                         }
                         .padding(.vertical, 4)
                     }
