@@ -16,7 +16,7 @@ class ChatViewModel: ObservableObject {
     }
     
     init() {
-        self.conversations = StorageService.shared.loadConversations()
+        self.conversations = StorageService.shared.loadConversations().sorted { $0.updatedAt > $1.updatedAt }
         self.settings = StorageService.shared.loadSettings()
         
         if let first = self.conversations.first {
@@ -59,6 +59,8 @@ class ChatViewModel: ObservableObject {
         
         guard let id = activeConversationId, let index = conversations.firstIndex(where: { $0.id == id }) else { return }
         
+        conversations[index].updatedAt = Date()
+        
         let userMessage = Message(role: .user, content: content)
         conversations[index].messages.append(userMessage)
         
@@ -72,10 +74,10 @@ class ChatViewModel: ObservableObject {
         let assistantMessage = Message(role: .assistant, content: "", isStreaming: true)
         conversations[index].messages.append(assistantMessage)
         
+        let messagesToSent = conversations[index].messages.dropLast() // exclude the empty assistant message
+        
         generatingConversationIds.insert(id)
         save()
-        
-        let messagesToSent = conversations[index].messages.dropLast() // exclude the empty assistant message
         
         let task = Task {
             do {
@@ -103,8 +105,14 @@ class ChatViewModel: ObservableObject {
             } catch {
                 if let convIndex = self.conversations.firstIndex(where: { $0.id == id }) {
                     let msgCount = self.conversations[convIndex].messages.count
-                    if msgCount > 0 {
-                        self.conversations[convIndex].messages[msgCount - 1].content += "\n\n**Error**: \(error.localizedDescription)"
+                    if msgCount > 0 && !self.conversations[convIndex].messages[msgCount - 1].isCancelled {
+                        // Only set error/cancel if stopGeneration hasn't already handled it
+                        let isCancelledError = error is CancellationError || (error as? URLError)?.code == .cancelled
+                        if isCancelledError {
+                            self.conversations[convIndex].messages[msgCount - 1].isCancelled = true
+                        } else {
+                            self.conversations[convIndex].messages[msgCount - 1].errorMessage = "\(error.localizedDescription)\n\nTip: If connecting to a local address, ensure you've granted Local Network permission in iOS Settings."
+                        }
                         self.conversations[convIndex].messages[msgCount - 1].isStreaming = false
                     }
                 }
@@ -122,14 +130,12 @@ class ChatViewModel: ObservableObject {
         guard let index = conversations.firstIndex(where: { $0.id == conversationId }) else { return }
         
         var messagesForTitle = conversations[index].messages
-        // System prompt to ask for a concise title
         let promptMessage = Message(role: .user, content: "Summarize our conversation above into a very concise title (maximum 5 words). Reply ONLY with the title text itself, without quotes, prefixes, or punctuation.")
         messagesForTitle.append(promptMessage)
         
         do {
             let generatedTitle = try await OllamaService.shared.generateChat(messages: messagesForTitle, settings: settings)
             if !generatedTitle.isEmpty {
-                // Remove quotes if the LLM happened to include them
                 let cleanTitle = generatedTitle.replacingOccurrences(of: "\"", with: "")
                 if let currentIndex = self.conversations.firstIndex(where: { $0.id == conversationId }) {
                     self.conversations[currentIndex].title = cleanTitle
@@ -149,6 +155,7 @@ class ChatViewModel: ObservableObject {
         if let convIndex = conversations.firstIndex(where: { $0.id == id }) {
             let msgCount = conversations[convIndex].messages.count
             if msgCount > 0 {
+                conversations[convIndex].messages[msgCount - 1].isCancelled = true
                 conversations[convIndex].messages[msgCount - 1].isStreaming = false
             }
         }
@@ -160,6 +167,7 @@ class ChatViewModel: ObservableObject {
     }
     
     private func save() {
+        conversations.sort { $0.updatedAt > $1.updatedAt }
         StorageService.shared.saveConversations(conversations)
     }
 }

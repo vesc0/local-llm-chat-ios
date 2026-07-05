@@ -12,6 +12,8 @@ struct Message: Identifiable, Codable, Equatable {
     var content: String
     var timestamp: Date = Date()
     var isStreaming: Bool = false
+    var isCancelled: Bool = false
+    var errorMessage: String? = nil
 }
 
 struct Conversation: Identifiable, Codable, Equatable {
@@ -31,7 +33,7 @@ enum ThemeMode: String, Codable, CaseIterable {
 
 struct AppSettings: Codable {
     var ollamaHost: String = "http://127.20.10.5:11434"
-    var selectedModel: String = "llama3:8b"
+    var selectedModel: String = "llama3.1:latest"
     var themeMode: ThemeMode = .auto
 }
 

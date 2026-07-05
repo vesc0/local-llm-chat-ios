@@ -5,7 +5,7 @@ struct Theme {
     static let surface = Color.themeSurface
     static let sidebar = Color.themeSidebar
     static let accent = Color.blue
-    static let userBubble = Color.blue.opacity(0.3)
+    static let userBubble = Color.blue
     static let assistantBubble = Color.themeSurface
     static let textPrimary = Color.primary
     static let textSecondary = Color.secondary
