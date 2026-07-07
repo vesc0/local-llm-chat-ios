@@ -59,4 +59,11 @@ class MLXService {
         }
         return fullResponse
     }
+    
+    func clearModel() {
+        self.modelContainer = nil
+        self.currentModelId = ""
+        self.isLoaded = false
+        MLX.Memory.clearCache()
+    }
 }

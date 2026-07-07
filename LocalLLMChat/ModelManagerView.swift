@@ -6,6 +6,7 @@ struct ModelManagerView: View {
     @StateObject private var modelManager = LocalModelManager.shared
     
     @State private var repoIdInput: String = ""
+    @State private var debugOutput: String = ""
     
     var body: some View {
         NavigationView {
@@ -47,8 +48,18 @@ struct ModelManagerView: View {
                         
                         if modelManager.isDownloading {
                             VStack(alignment: .leading, spacing: 8) {
-                                ProgressView(value: modelManager.downloadProgress, total: 1.0)
-                                    .tint(.blue)
+                                HStack(spacing: 12) {
+                                    ProgressView(value: modelManager.downloadProgress, total: 1.0)
+                                        .tint(.blue)
+                                    
+                                    Button(action: {
+                                        modelManager.cancelDownload()
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
+                                            .font(.title3)
+                                    }
+                                }
                                 Text(modelManager.downloadStatus)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -97,24 +108,21 @@ struct ModelManagerView: View {
                                                     .font(.headline)
                                                     .foregroundColor(.primary)
                                                 
-                                                HStack {
-                                                    Text(model.repoId.components(separatedBy: "/").first ?? "")
-                                                        .font(.caption)
-                                                        .foregroundColor(.secondary)
-                                                    
-                                                    Spacer()
-                                                    
-                                                    Text(model.sizeString)
-                                                        .font(.caption2)
-                                                        .padding(.horizontal, 6)
-                                                        .padding(.vertical, 2)
-                                                        .background(Color.blue.opacity(0.1))
-                                                        .foregroundColor(.blue)
-                                                        .cornerRadius(4)
-                                                }
+                                                Text(model.repoId.components(separatedBy: "/").first ?? "")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
                                             }
                                             
                                             Spacer()
+                                            
+                                            Text(model.sizeString)
+                                                .font(.caption2)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(Color.blue.opacity(0.1))
+                                                .foregroundColor(.blue)
+                                                .cornerRadius(4)
+                                                .padding(.trailing, 4)
                                             
                                             if viewModel.settings.localModelName == model.repoId && viewModel.settings.engine == .mlx {
                                                 Image(systemName: "checkmark.circle.fill")
@@ -132,6 +140,7 @@ struct ModelManagerView: View {
                                             viewModel.settings.localModelName = ""
                                         }
                                     }
+                                    viewModel.saveSettings()
                                 }
                             }
                         }
@@ -143,6 +152,27 @@ struct ModelManagerView: View {
                         ForEach(ThemeMode.allCases, id: \.self) { mode in
                             Text(mode.rawValue).tag(mode)
                         }
+                    }
+                }
+                
+                Section(header: Text("Storage Maintenance")) {
+                    Button(action: {
+                        modelManager.clearAllStorage()
+                        if viewModel.settings.engine == .mlx {
+                            viewModel.settings.localModelName = ""
+                        }
+                        viewModel.saveSettings()
+                    }) {
+                        Text("Clear All Cached Models & Data")
+                            .foregroundColor(.red)
+                    }
+                    
+                    Button("Debug Storage Used") {
+                        debugOutput = modelManager.debugStorage()
+                    }
+                    if !debugOutput.isEmpty {
+                        Text(debugOutput)
+                            .font(.system(.caption, design: .monospaced))
                     }
                 }
             }

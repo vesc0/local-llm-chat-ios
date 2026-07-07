@@ -4,6 +4,14 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: ChatViewModel
     @State private var showSidebar = false
     
+    var colorScheme: ColorScheme? {
+        switch viewModel.settings.themeMode {
+        case .light: return .light
+        case .dark: return .dark
+        case .auto: return nil
+        }
+    }
+    
     var body: some View {
         NavigationSplitView {
             SidebarView()
@@ -17,5 +25,6 @@ struct ContentView: View {
                     .font(.headline)
             }
         }
+        .preferredColorScheme(colorScheme)
     }
 }

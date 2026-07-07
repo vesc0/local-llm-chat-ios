@@ -96,6 +96,9 @@ class ChatViewModel: ObservableObject {
                 case .ollama:
                     try await OllamaService.shared.streamChat(messages: Array(messagesToSent), settings: settings, onToken: onToken)
                 case .mlx:
+                    guard !settings.localModelName.isEmpty else {
+                        throw NSError(domain: "ChatViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "No active MLX model selected. Please select a model in Model Manager."])
+                    }
                     try await MLXService.shared.streamChat(messages: Array(messagesToSent), modelId: settings.localModelName, onToken: onToken)
                 }
                 
@@ -147,6 +150,9 @@ class ChatViewModel: ObservableObject {
             case .ollama:
                 generatedTitle = try await OllamaService.shared.generateChat(messages: messagesForTitle, settings: settings)
             case .mlx:
+                guard !settings.localModelName.isEmpty else {
+                    return
+                }
                 generatedTitle = try await MLXService.shared.generateChat(messages: messagesForTitle, modelId: settings.localModelName)
             }
             
