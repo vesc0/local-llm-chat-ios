@@ -6,6 +6,19 @@ enum MessageRole: String, Codable {
     case system
 }
 
+enum AttachmentType: String, Codable {
+    case image
+    case pdf
+    case text
+}
+
+struct Attachment: Identifiable, Codable, Equatable {
+    var id: String = UUID().uuidString
+    var type: AttachmentType
+    var url: URL?
+    var extractedText: String?
+}
+
 struct Message: Identifiable, Codable, Equatable {
     var id: String = UUID().uuidString
     var role: MessageRole
@@ -14,6 +27,7 @@ struct Message: Identifiable, Codable, Equatable {
     var isStreaming: Bool = false
     var isCancelled: Bool = false
     var errorMessage: String? = nil
+    var attachments: [Attachment]? = nil
 }
 
 struct Conversation: Identifiable, Codable, Equatable {
@@ -55,4 +69,5 @@ struct OllamaStreamChunk: Codable {
 struct OllamaMessageChunk: Codable {
     let role: String
     let content: String
+    let images: [String]?
 }

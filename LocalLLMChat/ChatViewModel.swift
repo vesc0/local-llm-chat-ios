@@ -8,6 +8,7 @@ class ChatViewModel: ObservableObject {
     @Published var activeConversationId: String? = nil
     @Published var generatingConversationIds: Set<String> = []
     @Published var settings: AppSettings = AppSettings()
+    @Published var pendingAttachments: [Attachment] = []
     
     private var streamingTasks: [String: Task<Void, Never>] = [:]
     
@@ -51,8 +52,29 @@ class ChatViewModel: ObservableObject {
         }
     }
     
+    func addImageAttachment(_ image: UIImage) {
+        if let url = StorageService.shared.saveAttachmentImage(image: image) {
+            let attachment = Attachment(type: .image, url: url, extractedText: nil)
+            pendingAttachments.append(attachment)
+        }
+    }
+    
+    func addDocumentAttachment(url: URL) {
+        if let text = DocumentExtractionService.shared.extractText(from: url) {
+            let type: AttachmentType = url.pathExtension.lowercased() == "pdf" ? .pdf : .text
+            // Note: For document attachments,the URL doesn't need to be persisted long-term because the text has been extracted.
+            let attachment = Attachment(type: type, url: nil, extractedText: text)
+            pendingAttachments.append(attachment)
+        }
+    }
+    
+    func removePendingAttachment(id: String) {
+        pendingAttachments.removeAll { $0.id == id }
+    }
+    
     func sendMessage(_ content: String) {
-        guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let hasContent = !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard hasContent || !pendingAttachments.isEmpty else { return }
         
         if activeConversationId == nil {
             createConversation()
@@ -62,8 +84,25 @@ class ChatViewModel: ObservableObject {
         
         conversations[index].updatedAt = Date()
         
-        let userMessage = Message(role: .user, content: content)
+        conversations[index].updatedAt = Date()
+        
+        var messageContent = content
+        
+        // Append extracted text from document attachments to the prompt
+        let docTexts = pendingAttachments.compactMap { $0.extractedText }
+        if !docTexts.isEmpty {
+            let combinedDocs = docTexts.joined(separator: "\n\n---\n\n")
+            if messageContent.isEmpty {
+                messageContent = "Here are the attached documents:\n\n\(combinedDocs)"
+            } else {
+                messageContent = "\(messageContent)\n\nAttached Documents:\n\n\(combinedDocs)"
+            }
+        }
+        
+        let userMessage = Message(role: .user, content: messageContent, attachments: pendingAttachments.isEmpty ? nil : pendingAttachments)
         conversations[index].messages.append(userMessage)
+        
+        pendingAttachments.removeAll()
         
         // Auto-title if it's the first message
         let isFirstMessage = conversations[index].messages.count == 1

@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 class StorageService {
     static let shared = StorageService()
@@ -16,6 +17,46 @@ class StorageService {
     
     private var settingsFileURL: URL {
         documentsDirectory.appendingPathComponent("settings.json")
+    }
+    
+    private var attachmentsDirectory: URL {
+        let dir = documentsDirectory.appendingPathComponent("attachments")
+        if !fileManager.fileExists(atPath: dir.path) {
+            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir
+    }
+    
+    func saveAttachmentImage(image: UIImage) -> URL? {
+        let maxDimension: CGFloat = 1024
+        var targetSize = image.size
+        
+        if image.size.width > maxDimension || image.size.height > maxDimension {
+            let ratio = image.size.width / image.size.height
+            if ratio > 1 {
+                targetSize = CGSize(width: maxDimension, height: maxDimension / ratio)
+            } else {
+                targetSize = CGSize(width: maxDimension * ratio, height: maxDimension)
+            }
+        }
+        
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1 // Prevent automatic scaling by device screen scale
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        let resizedImage = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+        
+        guard let data = resizedImage.jpegData(compressionQuality: 0.8) else { return nil }
+        
+        let url = attachmentsDirectory.appendingPathComponent(UUID().uuidString + ".jpg")
+        do {
+            try data.write(to: url)
+            return url
+        } catch {
+            print("Failed to save attachment image: \(error)")
+            return nil
+        }
     }
     
     func saveConversations(_ conversations: [Conversation]) {

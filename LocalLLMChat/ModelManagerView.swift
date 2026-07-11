@@ -111,6 +111,39 @@ struct ModelManagerView: View {
                                                 Text(model.repoId.components(separatedBy: "/").first ?? "")
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
+                                                
+                                                HStack(spacing: 4) {
+                                                    ForEach(model.capabilities, id: \.self) { cap in
+                                                        Text(cap)
+                                                            .font(.caption2)
+                                                            .padding(.horizontal, 6)
+                                                            .padding(.vertical, 2)
+                                                            .background(cap == "Vision" ? Color.purple.opacity(0.15) : Color.gray.opacity(0.15))
+                                                            .foregroundColor(cap == "Vision" ? .purple : .secondary)
+                                                            .cornerRadius(4)
+                                                    }
+                                                    
+                                                    if let context = model.contextLength {
+                                                        Text("\(context/1024)k")
+                                                            .font(.caption2)
+                                                            .padding(.horizontal, 6)
+                                                            .padding(.vertical, 2)
+                                                            .background(Color.green.opacity(0.15))
+                                                            .foregroundColor(.green)
+                                                            .cornerRadius(4)
+                                                    }
+                                                    
+                                                    if let params = model.parameterCount {
+                                                        Text(params)
+                                                            .font(.caption2)
+                                                            .padding(.horizontal, 6)
+                                                            .padding(.vertical, 2)
+                                                            .background(Color.orange.opacity(0.15))
+                                                            .foregroundColor(.orange)
+                                                            .cornerRadius(4)
+                                                    }
+                                                }
+                                                .padding(.top, 2)
                                             }
                                             
                                             Spacer()

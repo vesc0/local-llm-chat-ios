@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0DA2478EA492F20227B6BF8D /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD8F643A6DCBFDC2C2696804 /* ChatView.swift */; };
+		26699C346B4249964E220DD7 /* DocumentExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460983E79603E50FDFA5DF2F /* DocumentExtractionService.swift */; };
 		28B2D6BE1CC93C8D9445073A /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 6AE38D506090BBA6B1FB5EAC /* MLXLLM */; };
 		2D63AAC124E04EF503F9964C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A737CA287C30A016E9EA5C /* ContentView.swift */; };
 		344BCC5C5F40E35F4580155C /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F2A8FCE70339E7B3144401 /* Models.swift */; };
@@ -36,6 +37,7 @@
 		2377A46657BC2C2C36E8D578 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		36CE88343ECE68E7F04A3C60 /* LocalLLMChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLLMChatApp.swift; sourceTree = "<group>"; };
 		45983CA6D57A782A0A0D21B5 /* ModelManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerView.swift; sourceTree = "<group>"; };
+		460983E79603E50FDFA5DF2F /* DocumentExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExtractionService.swift; sourceTree = "<group>"; };
 		46A737CA287C30A016E9EA5C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		51FED9A97B6ABD8B1B3ACBC8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		52F2A8FCE70339E7B3144401 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 				DD8F643A6DCBFDC2C2696804 /* ChatView.swift */,
 				B448C98D2B6FC9BA60D16AB5 /* ChatViewModel.swift */,
 				46A737CA287C30A016E9EA5C /* ContentView.swift */,
+				460983E79603E50FDFA5DF2F /* DocumentExtractionService.swift */,
 				36CE88343ECE68E7F04A3C60 /* LocalLLMChatApp.swift */,
 				CA2998BCA654299A743DC81E /* LocalModelManager.swift */,
 				6681A4E20749A6A86CA09F25 /* MessageBubbleView.swift */,
@@ -185,6 +188,7 @@
 				0DA2478EA492F20227B6BF8D /* ChatView.swift in Sources */,
 				FB6A9F35F376B2D9209B8456 /* ChatViewModel.swift in Sources */,
 				2D63AAC124E04EF503F9964C /* ContentView.swift in Sources */,
+				26699C346B4249964E220DD7 /* DocumentExtractionService.swift in Sources */,
 				B79BF26157B148E8BDB6111F /* LocalLLMChatApp.swift in Sources */,
 				D8A5326330685269AEFF6504 /* LocalModelManager.swift in Sources */,
 				A1EA40471EF07171EBF47D86 /* MLXService.swift in Sources */,

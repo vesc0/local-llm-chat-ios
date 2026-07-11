@@ -13,7 +13,19 @@ class OllamaService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let apiMessages = messages.map { ["role": $0.role.rawValue, "content": $0.content] }
+        let apiMessages = messages.map { msg -> [String: Any] in
+            var dict: [String: Any] = ["role": msg.role.rawValue, "content": msg.content]
+            if let attachments = msg.attachments {
+                let images = attachments.compactMap { att -> String? in
+                    guard att.type == .image, let url = att.url, let data = try? Data(contentsOf: url) else { return nil }
+                    return data.base64EncodedString()
+                }
+                if !images.isEmpty {
+                    dict["images"] = images
+                }
+            }
+            return dict
+        }
         let body: [String: Any] = [
             "model": settings.selectedModel,
             "messages": apiMessages,
@@ -55,7 +67,19 @@ class OllamaService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let apiMessages = messages.map { ["role": $0.role.rawValue, "content": $0.content] }
+        let apiMessages = messages.map { msg -> [String: Any] in
+            var dict: [String: Any] = ["role": msg.role.rawValue, "content": msg.content]
+            if let attachments = msg.attachments {
+                let images = attachments.compactMap { att -> String? in
+                    guard att.type == .image, let url = att.url, let data = try? Data(contentsOf: url) else { return nil }
+                    return data.base64EncodedString()
+                }
+                if !images.isEmpty {
+                    dict["images"] = images
+                }
+            }
+            return dict
+        }
         let body: [String: Any] = [
             "model": settings.selectedModel,
             "messages": apiMessages,

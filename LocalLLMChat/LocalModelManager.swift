@@ -7,6 +7,9 @@ struct MLXModel: Identifiable, Equatable {
     var id: String { repoId }
     let repoId: String
     let sizeBytes: Int64
+    let capabilities: [String]
+    let contextLength: Int?
+    let parameterCount: String?
     
     var sizeString: String {
         let formatter = ByteCountFormatter()
@@ -72,11 +75,59 @@ class LocalModelManager: ObservableObject {
             
             let size = directorySize(url: url)
             if size > 0 {
-                foundModels.append(MLXModel(repoId: repoId, sizeBytes: size))
+                let metadata = parseModelMetadata(for: url)
+                let paramCount = extractParameterCount(from: repoId)
+                foundModels.append(MLXModel(
+                    repoId: repoId,
+                    sizeBytes: size,
+                    capabilities: metadata.capabilities,
+                    contextLength: metadata.contextLength,
+                    parameterCount: paramCount
+                ))
             }
         }
         
         self.downloadedModels = foundModels.sorted { $0.repoId < $1.repoId }
+    }
+    
+    private func parseModelMetadata(for url: URL) -> (capabilities: [String], contextLength: Int?) {
+        var capabilities: [String] = ["Text"]
+        var contextLength: Int? = nil
+        
+        let snapshotsURL = url.appendingPathComponent("snapshots")
+        if let snapshots = try? fileManager.contentsOfDirectory(at: snapshotsURL, includingPropertiesForKeys: nil),
+           let latestSnapshot = snapshots.first {
+            let configURL = latestSnapshot.appendingPathComponent("config.json")
+            if let data = try? Data(contentsOf: configURL),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                
+                if let modelType = json["model_type"] as? String {
+                    let visionTypes = ["llava", "qwen2_vl", "paligemma", "idefics2", "vision", "moondream", "pixtral", "clip", "minicpmv"]
+                    if visionTypes.contains(where: { modelType.lowercased().contains($0) }) {
+                        capabilities.append("Vision")
+                    }
+                }
+                
+                if let maxPos = json["max_position_embeddings"] as? Int {
+                    contextLength = maxPos
+                } else if let maxSeq = json["max_sequence_length"] as? Int {
+                    contextLength = maxSeq
+                }
+            }
+        }
+        
+        return (capabilities, contextLength)
+    }
+    
+    private func extractParameterCount(from repoId: String) -> String? {
+        let pattern = "(\\d+(?:\\.\\d+)?[bB])"
+        if let regex = try? NSRegularExpression(pattern: pattern),
+           let match = regex.firstMatch(in: repoId, range: NSRange(repoId.startIndex..., in: repoId)) {
+            if let range = Range(match.range(at: 1), in: repoId) {
+                return String(repoId[range]).uppercased()
+            }
+        }
+        return nil
     }
     
     // MARK: - Download

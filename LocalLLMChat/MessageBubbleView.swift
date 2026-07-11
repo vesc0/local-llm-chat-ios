@@ -19,8 +19,30 @@ struct MessageBubbleView: View {
                         TypingIndicatorView()
                             .padding(14)
                             .frame(minHeight: 44)
-                    } else if !message.content.isEmpty || message.isCancelled || message.errorMessage != nil {
+                    } else if !message.content.isEmpty || message.isCancelled || message.errorMessage != nil || (message.attachments != nil && !message.attachments!.isEmpty) {
                         VStack(alignment: .leading, spacing: 8) {
+                            if let attachments = message.attachments, !attachments.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(attachments) { attachment in
+                                            if attachment.type == .image, let url = attachment.url, let uiImage = UIImage(contentsOfFile: url.path) {
+                                                Image(uiImage: uiImage)
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 150, height: 150)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            } else if attachment.type == .pdf {
+                                                DocumentThumbnail(icon: "doc.text.fill", color: .red)
+                                                    .frame(width: 80, height: 80)
+                                            } else if attachment.type == .text {
+                                                DocumentThumbnail(icon: "doc.plaintext.fill", color: .gray)
+                                                    .frame(width: 80, height: 80)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
                             if !message.content.isEmpty {
                                 Text(LocalizedStringKey(message.content))
                                     .foregroundColor(bubbleTextColor)
