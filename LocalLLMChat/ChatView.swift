@@ -24,78 +24,78 @@ struct ChatView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                if let activeConv = viewModel.activeConversation {
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            LazyVStack(spacing: 16) {
-                                ForEach(groupedMessages(from: activeConv.messages), id: \.date) { group in
-                                    Text(dateFormatter.string(from: group.date))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.vertical, 8)
-                                    
-                                    ForEach(group.messages) { message in
-                                        MessageBubbleView(message: message)
-                                            .id(message.id)
-                                    }
-                                }
+            if let activeConv = viewModel.activeConversation {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(groupedMessages(from: activeConv.messages), id: \.date) { group in
+                                Text(dateFormatter.string(from: group.date))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding(.vertical, 8)
                                 
-                                // Invisible bottom anchor used for scroll tracking and programmatic scrolling
-                                Color.clear
-                                    .frame(height: 1)
-                                    .id("bottom")
-                                    .onAppear { isAtBottom = true }
-                                    .onDisappear { isAtBottom = false }
+                                ForEach(group.messages) { message in
+                                    MessageBubbleView(message: message)
+                                        .id(message.id)
+                                }
                             }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .top)
+                            
+                            // Invisible bottom anchor used for scroll tracking and programmatic scrolling
+                            Color.clear
+                                .frame(height: 1)
+                                .id("bottom")
+                                .onAppear { isAtBottom = true }
+                                .onDisappear { isAtBottom = false }
                         }
-                        .scrollDismissesKeyboard(.interactively)
-                        .onTapGesture {
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                        }
-                        .onChange(of: activeConv.messages.count) {
-                            if isAtBottom {
-                                scrollToBottom(proxy: proxy)
-                            }
-                        }
-                        .onChange(of: activeConv.messages.last?.content) {
-                            if isAtBottom {
-                                scrollToBottom(proxy: proxy)
-                            }
-                        }
-                        .onChange(of: forceScroll) {
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .onChange(of: activeConv.messages.count) {
+                        if isAtBottom {
                             scrollToBottom(proxy: proxy)
                         }
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                scrollToBottom(proxy: proxy)
-                            }
-                        }
-                        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                scrollToBottom(proxy: proxy)
-                            }
+                    }
+                    .onChange(of: activeConv.messages.last?.content) {
+                        if isAtBottom {
+                            scrollToBottom(proxy: proxy)
                         }
                     }
+                    .onChange(of: forceScroll) {
+                        scrollToBottom(proxy: proxy)
+                    }
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            scrollToBottom(proxy: proxy)
+                        }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            scrollToBottom(proxy: proxy)
+                        }
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        ChatInputView(inputText: $inputText)
+                    }
                 }
-                
-                ChatInputView(inputText: $inputText)
             }
             
-            if !isAtBottom {
+            
+            if !isAtBottom, let conv = viewModel.activeConversation, conv.messages.count > 1 {
                 Button(action: {
                     forceScroll = UUID()
                 }) {
                     Image(systemName: "arrow.down")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                         .frame(width: 32, height: 32)
-                        .background(Circle().fill(Color.white))
+                        .background(.ultraThinMaterial, in: Circle())
                         .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
                 }
-                .padding(.bottom, 70)
+                .padding(.bottom, 60)
                 .transition(.opacity.combined(with: .scale))
                 .animation(.easeInOut(duration: 0.2), value: isAtBottom)
             }

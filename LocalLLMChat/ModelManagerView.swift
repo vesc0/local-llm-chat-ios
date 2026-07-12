@@ -210,9 +210,11 @@ struct ModelManagerView: View {
                 }
             }
             .navigationTitle("Model Manager")
-            .navigationBarItems(trailing: Button("Done") {
+            .navigationBarItems(trailing: Button(action: {
                 viewModel.saveSettings()
                 dismiss()
+            }) {
+                Image(systemName: "checkmark")
             })
             .onAppear {
                 modelManager.scanModels()

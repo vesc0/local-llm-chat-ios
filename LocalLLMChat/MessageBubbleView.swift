@@ -3,22 +3,40 @@ import SwiftUI
 struct MessageBubbleView: View {
     let message: Message
     
+    @State private var isCopied = false
+    
+    private var isUser: Bool {
+        message.role == .user
+    }
+    
     private var bubbleTextColor: Color {
-        message.role == .user ? .white : Theme.textPrimary
+        isUser ? .white : Theme.textPrimary
     }
     
     var body: some View {
-        HStack {
-            if message.role == .user {
+        HStack(alignment: .top, spacing: 12) {
+            if isUser {
                 Spacer(minLength: 40)
+            } else {
+                // Assistant Avatar
+                ZStack {
+                    Circle()
+                        .fill(Theme.textPrimary.opacity(0.1))
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(Theme.textPrimary)
+                }
+                .frame(width: 28, height: 28)
+                .padding(.top, isUser ? 0 : 2)
             }
             
-            VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
                 Group {
                     if message.isStreaming && message.content.isEmpty {
                         TypingIndicatorView()
-                            .padding(14)
-                            .frame(minHeight: 44)
+                            .padding(isUser ? 14 : 0)
+                            .padding(.vertical, isUser ? 0 : 10)
+                            .frame(minHeight: isUser ? 44 : 20)
                     } else if !message.content.isEmpty || message.isCancelled || message.errorMessage != nil || (message.attachments != nil && !message.attachments!.isEmpty) {
                         VStack(alignment: .leading, spacing: 8) {
                             if let attachments = message.attachments, !attachments.isEmpty {
@@ -46,6 +64,7 @@ struct MessageBubbleView: View {
                             if !message.content.isEmpty {
                                 Text(LocalizedStringKey(message.content))
                                     .foregroundColor(bubbleTextColor)
+                                    .textSelection(.enabled)
                             }
                             if message.isCancelled {
                                 Text("(cancelled)")
@@ -58,31 +77,54 @@ struct MessageBubbleView: View {
                                     .font(.subheadline)
                             }
                         }
-                        .padding(14)
+                        .padding(isUser ? 14 : 0)
+                        .padding(.vertical, isUser ? 0 : 4)
                     }
                 }
-                .background(message.role == .user ? Theme.userBubble : Theme.assistantBubble)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .contextMenu {
-                    if !message.content.isEmpty {
-                        Button {
-                            UIPasteboard.general.string = message.content
-                        } label: {
-                            Label("Copy", systemImage: "doc.on.doc")
-                        }
-                    }
-                }
+                .background(isUser ? Theme.userBubble : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: isUser ? 18 : 0))
                 
                 if !message.isStreaming || !message.content.isEmpty {
-                    Text(message.timestamp, style: .time)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 4)
+                    HStack(spacing: 12) {
+                        Text(message.timestamp, style: .time)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        if !isUser {
+                            Button {
+                                UIPasteboard.general.string = message.content
+                                withAnimation {
+                                    isCopied = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    withAnimation {
+                                        isCopied = false
+                                    }
+                                }
+                            } label: {
+                                if isCopied {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark")
+                                        Text("Copied")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                } else {
+                                    Image(systemName: "doc.on.doc")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, isUser ? 4 : 0)
+                    .padding(.top, 2)
                 }
             }
             
-            if message.role == .assistant {
-                Spacer(minLength: 40)
+            if !isUser {
+                Spacer(minLength: 0)
             }
         }
     }

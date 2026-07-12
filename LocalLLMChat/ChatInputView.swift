@@ -10,8 +10,13 @@ struct ChatInputView: View {
     @State private var showPhotoPicker = false
     @State private var showDocumentPicker = false
     
+    private var canSend: Bool {
+        !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !viewModel.pendingAttachments.isEmpty
+    }
+    
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            // Pending attachments row
             if !viewModel.pendingAttachments.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -44,11 +49,13 @@ struct ChatInputView: View {
                             .padding(.top, 8)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16)
                 }
             }
             
-            HStack(alignment: .bottom) {
+            // Input row: + button, unified text field & send button pill
+            HStack(alignment: .bottom, spacing: 8) {
+                // Plus button — glass circle
                 Menu {
                     Button(action: {
                         showPhotoPicker = true
@@ -62,45 +69,62 @@ struct ChatInputView: View {
                     }
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 24))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(Theme.textSecondary)
-                        .padding(.bottom, 8)
+                        .frame(width: 36, height: 36)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .padding(.bottom, 2)
+                
+                // Unified glass pill for text field and send button
+                HStack(alignment: .bottom, spacing: 4) {
+                    TextField("Type a message...", text: $inputText, axis: .vertical)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .lineLimit(1...5)
+                    
+                    // Send / Stop button inside the pill
+                    if viewModel.isGenerating {
+                        Button(action: {
+                            viewModel.stopGeneration()
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color(UIColor.label))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "stop.fill")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(Color(UIColor.systemBackground))
+                            }
+                        }
                         .padding(.trailing, 4)
-                }
-                
-                TextField("Type a message...", text: $inputText, axis: .vertical)
-                    .padding(12)
-                    .background(Theme.surface)
-                    .cornerRadius(20)
-                    .lineLimit(1...5)
-                
-                if viewModel.isGenerating {
-                    Button(action: {
-                        viewModel.stopGeneration()
-                    }) {
-                        Image(systemName: "stop.circle.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(Theme.textPrimary)
+                        .padding(.bottom, 4)
+                    } else {
+                        Button(action: {
+                            let text = inputText
+                            inputText = ""
+                            viewModel.sendMessage(text)
+                        }) {
+                            ZStack {
+                                Circle()
+                                    .fill(canSend ? Theme.accent : Color(UIColor.systemGray3))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "arrow.up")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .disabled(!canSend)
+                        .padding(.trailing, 4)
+                        .padding(.bottom, 4)
                     }
-                    .padding(.bottom, 4)
-                } else {
-                    Button(action: {
-                        let text = inputText
-                        inputText = ""
-                        viewModel.sendMessage(text)
-                    }) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor((inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && viewModel.pendingAttachments.isEmpty) ? Theme.textSecondary : Theme.accent)
-                    }
-                    .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && viewModel.pendingAttachments.isEmpty)
-                    .padding(.bottom, 4)
                 }
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
             }
-            .padding(.horizontal)
-            .padding(.bottom)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
         }
-        .background(Theme.background)
+        .padding(.top, 10)
         .fileImporter(isPresented: $showDocumentPicker, allowedContentTypes: [.pdf, .plainText, .commaSeparatedText]) { result in
             switch result {
             case .success(let url):
