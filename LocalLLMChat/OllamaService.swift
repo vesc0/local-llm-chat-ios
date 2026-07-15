@@ -45,13 +45,32 @@ class OllamaService {
             throw URLError(.badServerResponse)
         }
         
+        var isThinking = false
+        
         for try await line in result.lines {
             guard let data = line.data(using: .utf8) else { continue }
             if let chunk = try? JSONDecoder().decode(OllamaStreamChunk.self, from: data) {
-                if let content = chunk.message?.content {
-                    await MainActor.run {
-                        onToken(content)
+                var tokensToEmit = ""
+                
+                if let thinkingToken = chunk.message?.thinking, !thinkingToken.isEmpty {
+                    if !isThinking {
+                        isThinking = true
+                        tokensToEmit += "<think>\n"
                     }
+                    tokensToEmit += thinkingToken
+                }
+                
+                if let contentToken = chunk.message?.content, !contentToken.isEmpty {
+                    if isThinking {
+                        isThinking = false
+                        tokensToEmit += "\n</think>\n"
+                    }
+                    tokensToEmit += contentToken
+                }
+                
+                if !tokensToEmit.isEmpty {
+                    let emitString = tokensToEmit
+                    await MainActor.run { onToken(emitString) }
                 }
             }
         }
@@ -104,6 +123,16 @@ class OllamaService {
         }
         
         let result = try JSONDecoder().decode(OllamaResponse.self, from: data)
-        return result.message?.content.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        var finalContent = ""
+        
+        if let thinking = result.message?.thinking, !thinking.isEmpty {
+            finalContent += "<think>\n\(thinking)\n</think>\n"
+        }
+        
+        if let content = result.message?.content {
+            finalContent += content
+        }
+        
+        return finalContent.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

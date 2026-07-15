@@ -4,6 +4,7 @@ struct MessageBubbleView: View {
     let message: Message
     
     @State private var isCopied = false
+    @State private var isThoughtExpanded = false
     
     private var isUser: Bool {
         message.role == .user
@@ -62,9 +63,41 @@ struct MessageBubbleView: View {
                             }
                             
                             if !message.content.isEmpty {
-                                Text(LocalizedStringKey(message.content))
-                                    .foregroundColor(bubbleTextColor)
-                                    .textSelection(.enabled)
+                                let parsed = parseMessage(message.content)
+                                
+                                if let thought = parsed.thought {
+                                    DisclosureGroup(isExpanded: $isThoughtExpanded) {
+                                        Text(LocalizedStringKey(thought))
+                                            .font(.callout)
+                                            .foregroundColor(.secondary)
+                                            .textSelection(.enabled)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    } label: {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "brain")
+                                            if message.isStreaming && parsed.answer.isEmpty {
+                                                AnimatedThinkingLabel()
+                                            } else if let thoughtTime = message.thoughtTime {
+                                                Text("Thought for \(String(format: "%.1f", thoughtTime))s")
+                                            } else {
+                                                Text("Thought Process")
+                                            }
+                                        }
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundColor(.secondary)
+                                    }
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 10)
+                                    .background(Color.secondary.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .padding(.bottom, parsed.answer.isEmpty ? 0 : 8)
+                                }
+                                
+                                if !parsed.answer.isEmpty {
+                                    Text(LocalizedStringKey(parsed.answer))
+                                        .foregroundColor(bubbleTextColor)
+                                        .textSelection(.enabled)
+                                }
                             }
                             if message.isCancelled {
                                 Text("(cancelled)")
@@ -128,6 +161,43 @@ struct MessageBubbleView: View {
             }
         }
     }
+    
+    private struct ParsedMessage {
+        var thought: String?
+        var answer: String
+    }
+    
+    private func parseMessage(_ content: String) -> ParsedMessage {
+        var thoughts: [String] = []
+        var answer = content
+        
+        let pattern = "(?i)<(?:think|thought|\\|begin_of_thought\\|)>([\\s\\S]*?)(?:</(?:think|thought)>|<\\|end_of_thought\\|>|$)"
+        
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let nsString = answer as NSString
+            let results = regex.matches(in: answer, options: [], range: NSRange(location: 0, length: nsString.length))
+            
+            for match in results.reversed() {
+                if match.numberOfRanges > 1 {
+                    let thoughtRange = match.range(at: 1)
+                    if thoughtRange.location != NSNotFound {
+                        let thought = nsString.substring(with: thoughtRange).trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !thought.isEmpty {
+                            thoughts.insert(thought, at: 0)
+                        }
+                    }
+                    
+                    let fullMatchRange = match.range(at: 0)
+                    answer = (answer as NSString).replacingCharacters(in: fullMatchRange, with: "")
+                }
+            }
+        }
+        
+        let finalThought = thoughts.isEmpty ? nil : thoughts.joined(separator: "\n\n")
+        let finalAnswer = answer.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return ParsedMessage(thought: finalThought, answer: finalAnswer)
+    }
 }
 
 struct TypingIndicatorView: View {
@@ -158,6 +228,35 @@ struct TypingIndicatorView: View {
         }
         .onAppear {
             isAnimating = true
+        }
+    }
+}
+
+struct AnimatedThinkingLabel: View {
+    @State private var isGlowing = false
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("Thinking")
+            
+            HStack(spacing: 2) {
+                Circle().fill(Color.secondary).frame(width: 3, height: 3)
+                    .opacity(isGlowing ? 1 : 0.3)
+                    .animation(.easeInOut(duration: 0.6).repeatForever().delay(0), value: isGlowing)
+                Circle().fill(Color.secondary).frame(width: 3, height: 3)
+                    .opacity(isGlowing ? 1 : 0.3)
+                    .animation(.easeInOut(duration: 0.6).repeatForever().delay(0.2), value: isGlowing)
+                Circle().fill(Color.secondary).frame(width: 3, height: 3)
+                    .opacity(isGlowing ? 1 : 0.3)
+                    .animation(.easeInOut(duration: 0.6).repeatForever().delay(0.4), value: isGlowing)
+            }
+            .offset(y: 4) // Align dots with the baseline
+        }
+        .shadow(color: isGlowing ? Color.primary.opacity(0.4) : Color.clear, radius: isGlowing ? 4 : 0)
+        .opacity(isGlowing ? 1.0 : 0.7)
+        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isGlowing)
+        .onAppear {
+            isGlowing = true
         }
     }
 }

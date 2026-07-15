@@ -26,6 +26,7 @@ struct Message: Identifiable, Codable, Equatable {
     var timestamp: Date = Date()
     var isStreaming: Bool = false
     var isCancelled: Bool = false
+    var thoughtTime: TimeInterval? = nil
     var errorMessage: String? = nil
     var attachments: [Attachment]? = nil
 }
@@ -67,7 +68,8 @@ struct OllamaStreamChunk: Codable {
 }
 
 struct OllamaMessageChunk: Codable {
-    let role: String
+    let role: String?
     let content: String
+    let thinking: String?
     let images: [String]?
 }

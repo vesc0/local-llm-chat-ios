@@ -127,6 +127,14 @@ class ChatViewModel: ObservableObject {
                         let msgCount = self.conversations[convIndex].messages.count
                         if msgCount > 0 {
                             self.conversations[convIndex].messages[msgCount - 1].content += token
+                            
+                            let lowerToken = token.lowercased()
+                            if lowerToken.contains("</think>") || lowerToken.contains("</thought>") || lowerToken.contains("<|end_of_thought|>") {
+                                if self.conversations[convIndex].messages[msgCount - 1].thoughtTime == nil {
+                                    let elapsed = Date().timeIntervalSince(self.conversations[convIndex].messages[msgCount - 1].timestamp)
+                                    self.conversations[convIndex].messages[msgCount - 1].thoughtTime = elapsed
+                                }
+                            }
                         }
                     }
                 }
