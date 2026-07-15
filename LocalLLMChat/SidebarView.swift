@@ -66,7 +66,7 @@ struct SidebarView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: { showingSettings = true }) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                 }
             }
         }

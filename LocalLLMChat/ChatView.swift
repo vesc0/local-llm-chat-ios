@@ -5,6 +5,7 @@ struct ChatView: View {
     @State private var inputText: String = ""
     @State private var isAtBottom: Bool = true
     @State private var forceScroll: UUID = UUID()
+    @State private var scrollViewHeight: CGFloat = 0
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -44,11 +45,25 @@ struct ChatView: View {
                             Color.clear
                                 .frame(height: 1)
                                 .id("bottom")
-                                .onAppear { isAtBottom = true }
-                                .onDisappear { isAtBottom = false }
+                                .background(GeometryReader { geo in
+                                    Color.clear.preference(key: BottomAnchorPreferenceKey.self, value: geo.frame(in: .named("ScrollView")).maxY)
+                                })
                         }
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .coordinateSpace(name: "ScrollView")
+                    .background(GeometryReader { geo in
+                        Color.clear.preference(key: ScrollViewHeightPreferenceKey.self, value: geo.size.height)
+                    })
+                    .onPreferenceChange(BottomAnchorPreferenceKey.self) { bottomY in
+                        let isVisible = bottomY <= scrollViewHeight + 50
+                        if isAtBottom != isVisible {
+                            isAtBottom = isVisible
+                        }
+                    }
+                    .onPreferenceChange(ScrollViewHeightPreferenceKey.self) { height in
+                        scrollViewHeight = height
                     }
                     .scrollDismissesKeyboard(.interactively)
                     .onTapGesture {
@@ -84,7 +99,7 @@ struct ChatView: View {
             }
             
             
-            if !isAtBottom, let conv = viewModel.activeConversation, conv.messages.count > 1 {
+            if !isAtBottom {
                 Button(action: {
                     forceScroll = UUID()
                 }) {
@@ -108,5 +123,19 @@ struct ChatView: View {
         withAnimation(.easeOut(duration: 0.2)) {
             proxy.scrollTo("bottom", anchor: .bottom)
         }
+    }
+}
+
+struct BottomAnchorPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = .infinity
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = min(value, nextValue())
+    }
+}
+
+struct ScrollViewHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
