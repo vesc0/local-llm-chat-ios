@@ -44,12 +44,15 @@ struct MessageBubbleView: View {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 8) {
                                         ForEach(attachments) { attachment in
-                                            if attachment.type == .image, let url = attachment.url, let uiImage = UIImage(contentsOfFile: url.path) {
-                                                Image(uiImage: uiImage)
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 150, height: 150)
-                                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            if attachment.type == .image, let url = attachment.url {
+                                                let actualURL = StorageService.shared.getAttachmentURL(for: url.lastPathComponent)
+                                                if let uiImage = UIImage(contentsOfFile: actualURL.path) {
+                                                    Image(uiImage: uiImage)
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 150, height: 150)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                }
                                             } else if attachment.type == .pdf {
                                                 DocumentThumbnail(icon: "doc.text.fill", color: .red)
                                                     .frame(width: 80, height: 80)

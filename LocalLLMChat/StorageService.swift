@@ -27,6 +27,10 @@ class StorageService {
         return dir
     }
     
+    func getAttachmentURL(for filename: String) -> URL {
+        return attachmentsDirectory.appendingPathComponent(filename)
+    }
+    
     func saveAttachmentImage(image: UIImage) -> URL? {
         let maxDimension: CGFloat = 1024
         var targetSize = image.size

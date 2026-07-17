@@ -17,7 +17,9 @@ class OllamaService {
             var dict: [String: Any] = ["role": msg.role.rawValue, "content": msg.content]
             if let attachments = msg.attachments {
                 let images = attachments.compactMap { att -> String? in
-                    guard att.type == .image, let url = att.url, let data = try? Data(contentsOf: url) else { return nil }
+                    guard att.type == .image, let url = att.url else { return nil }
+                    let actualURL = StorageService.shared.getAttachmentURL(for: url.lastPathComponent)
+                    guard let data = try? Data(contentsOf: actualURL) else { return nil }
                     return data.base64EncodedString()
                 }
                 if !images.isEmpty {
@@ -90,7 +92,9 @@ class OllamaService {
             var dict: [String: Any] = ["role": msg.role.rawValue, "content": msg.content]
             if let attachments = msg.attachments {
                 let images = attachments.compactMap { att -> String? in
-                    guard att.type == .image, let url = att.url, let data = try? Data(contentsOf: url) else { return nil }
+                    guard att.type == .image, let url = att.url else { return nil }
+                    let actualURL = StorageService.shared.getAttachmentURL(for: url.lastPathComponent)
+                    guard let data = try? Data(contentsOf: actualURL) else { return nil }
                     return data.base64EncodedString()
                 }
                 if !images.isEmpty {

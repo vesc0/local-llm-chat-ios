@@ -23,12 +23,15 @@ struct ChatInputView: View {
                         ForEach(viewModel.pendingAttachments) { attachment in
                             ZStack(alignment: .topTrailing) {
                                 Group {
-                                    if attachment.type == .image, let url = attachment.url, let uiImage = UIImage(contentsOfFile: url.path) {
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    if attachment.type == .image, let url = attachment.url {
+                                        let actualURL = StorageService.shared.getAttachmentURL(for: url.lastPathComponent)
+                                        if let uiImage = UIImage(contentsOfFile: actualURL.path) {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 60, height: 60)
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        }
                                     } else if attachment.type == .pdf {
                                         DocumentThumbnail(icon: "doc.text.fill", color: .red)
                                     } else {
