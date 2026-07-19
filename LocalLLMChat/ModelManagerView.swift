@@ -189,6 +189,8 @@ struct ModelManagerView: View {
                 }
                 
                 Section(header: Text("Storage Maintenance")) {
+                    NavigationLink("Manage Uploaded Images", destination: AttachmentManagerView())
+                    
                     Button(action: {
                         modelManager.clearAllStorage()
                         if viewModel.settings.engine == .mlx {

@@ -63,6 +63,29 @@ class StorageService {
         }
     }
     
+    func listAttachmentImages() -> [URL] {
+        do {
+            let files = try fileManager.contentsOfDirectory(at: attachmentsDirectory, includingPropertiesForKeys: [.creationDateKey], options: .skipsHiddenFiles)
+            return files.filter { $0.pathExtension.lowercased() == "jpg" || $0.pathExtension.lowercased() == "png" }
+                .sorted { (u1, u2) -> Bool in
+                    let d1 = (try? u1.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date.distantPast
+                    let d2 = (try? u2.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date.distantPast
+                    return d1 > d2
+                }
+        } catch {
+            print("Failed to list attachments: \(error)")
+            return []
+        }
+    }
+    
+    func deleteAttachment(at url: URL) {
+        do {
+            try fileManager.removeItem(at: url)
+        } catch {
+            print("Failed to delete attachment: \(error)")
+        }
+    }
+    
     func saveConversations(_ conversations: [Conversation]) {
         do {
             let data = try JSONEncoder().encode(conversations)
