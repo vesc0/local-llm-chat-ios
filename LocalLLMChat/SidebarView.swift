@@ -71,7 +71,7 @@ struct SidebarView: View {
             }
         }
         .sheet(isPresented: $showingSettings) {
-            ModelManagerView()
+            SettingsView()
                 .environmentObject(viewModel)
         }
     }
