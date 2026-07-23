@@ -139,4 +139,33 @@ class OllamaService {
         
         return finalContent.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+    
+    func fetchModels(host: String) async throws -> [String] {
+        let endpoint = "\(host)/api/tags"
+        guard let url = URL(string: endpoint) else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = false
+        config.timeoutIntervalForRequest = 2.0
+        let session = URLSession(configuration: config)
+        
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        
+        struct OllamaTagsResponse: Codable {
+            struct ModelTag: Codable {
+                let name: String
+            }
+            let models: [ModelTag]
+        }
+        
+        let result = try JSONDecoder().decode(OllamaTagsResponse.self, from: data)
+        return result.models.map { $0.name }
+    }
 }

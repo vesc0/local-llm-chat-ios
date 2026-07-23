@@ -11,9 +11,11 @@
 		1AABD4EB8AF2DE2B00EC2F27 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAC7FBA77F8855F18D28382 /* SettingsView.swift */; };
 		26699C346B4249964E220DD7 /* DocumentExtractionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460983E79603E50FDFA5DF2F /* DocumentExtractionService.swift */; };
 		28B2D6BE1CC93C8D9445073A /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 6AE38D506090BBA6B1FB5EAC /* MLXLLM */; };
+		28C858DD4FE32A6371F7F0BE /* MLXModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFC49EE24AB39E297C4589B /* MLXModelSelectionView.swift */; };
 		2D63AAC124E04EF503F9964C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A737CA287C30A016E9EA5C /* ContentView.swift */; };
 		344BCC5C5F40E35F4580155C /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52F2A8FCE70339E7B3144401 /* Models.swift */; };
 		3AEB6915516538F9BEA42387 /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = 57DDC9BADDD672320535F1AB /* MLXHuggingFace */; };
+		4B6D7149435166BD7EB40FBC /* OllamaModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23BFBF6FC2CE6A1E65FE5804 /* OllamaModelSelectionView.swift */; };
 		4DE848DED1757EFEBFBC92DC /* AttachmentManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41064BD3B0F87554DD248A30 /* AttachmentManagerView.swift */; };
 		51F0A238E15A0E1B926E61D2 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 60E1BF20DCE9FDD9873E9A0C /* MLXLMCommon */; };
 		55B7CF1AC7E16DE2592FBC16 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069FA47A8407C2EB67A73993 /* SidebarView.swift */; };
@@ -36,10 +38,12 @@
 		03A8EF848E9D2C0CF72BAC83 /* LocalLLMChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LocalLLMChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		069FA47A8407C2EB67A73993 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		2377A46657BC2C2C36E8D578 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		23BFBF6FC2CE6A1E65FE5804 /* OllamaModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaModelSelectionView.swift; sourceTree = "<group>"; };
 		36CE88343ECE68E7F04A3C60 /* LocalLLMChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLLMChatApp.swift; sourceTree = "<group>"; };
 		41064BD3B0F87554DD248A30 /* AttachmentManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentManagerView.swift; sourceTree = "<group>"; };
 		460983E79603E50FDFA5DF2F /* DocumentExtractionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentExtractionService.swift; sourceTree = "<group>"; };
 		46A737CA287C30A016E9EA5C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		4EFC49EE24AB39E297C4589B /* MLXModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXModelSelectionView.swift; sourceTree = "<group>"; };
 		51FED9A97B6ABD8B1B3ACBC8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		52F2A8FCE70339E7B3144401 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		5EAC7FBA77F8855F18D28382 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -83,8 +87,10 @@
 				36CE88343ECE68E7F04A3C60 /* LocalLLMChatApp.swift */,
 				CA2998BCA654299A743DC81E /* LocalModelManager.swift */,
 				6681A4E20749A6A86CA09F25 /* MessageBubbleView.swift */,
+				4EFC49EE24AB39E297C4589B /* MLXModelSelectionView.swift */,
 				76BB95301FBE0B2DBB3B0B7D /* MLXService.swift */,
 				52F2A8FCE70339E7B3144401 /* Models.swift */,
+				23BFBF6FC2CE6A1E65FE5804 /* OllamaModelSelectionView.swift */,
 				C688867691BAAF707D5249E5 /* OllamaService.swift */,
 				5EAC7FBA77F8855F18D28382 /* SettingsView.swift */,
 				069FA47A8407C2EB67A73993 /* SidebarView.swift */,
@@ -195,9 +201,11 @@
 				26699C346B4249964E220DD7 /* DocumentExtractionService.swift in Sources */,
 				B79BF26157B148E8BDB6111F /* LocalLLMChatApp.swift in Sources */,
 				D8A5326330685269AEFF6504 /* LocalModelManager.swift in Sources */,
+				28C858DD4FE32A6371F7F0BE /* MLXModelSelectionView.swift in Sources */,
 				A1EA40471EF07171EBF47D86 /* MLXService.swift in Sources */,
 				B121E8F272C964111A1BDE8A /* MessageBubbleView.swift in Sources */,
 				344BCC5C5F40E35F4580155C /* Models.swift in Sources */,
+				4B6D7149435166BD7EB40FBC /* OllamaModelSelectionView.swift in Sources */,
 				CFD014484C9A8851CD9CA8B1 /* OllamaService.swift in Sources */,
 				1AABD4EB8AF2DE2B00EC2F27 /* SettingsView.swift in Sources */,
 				55B7CF1AC7E16DE2592FBC16 /* SidebarView.swift in Sources */,
