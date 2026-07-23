@@ -20,10 +20,6 @@ class ChatViewModel: ObservableObject {
     init() {
         self.conversations = StorageService.shared.loadConversations().sorted { $0.updatedAt > $1.updatedAt }
         self.settings = StorageService.shared.loadSettings()
-        
-        if let first = self.conversations.first {
-            self.activeConversationId = first.id
-        }
     }
     
     var activeConversation: Conversation? {
