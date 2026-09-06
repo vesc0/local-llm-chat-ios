@@ -7,11 +7,31 @@ on:
 
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - run: brew install xcodegen
       - run: xcodegen generate
+      - run: xcodebuild -version
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          for runtime, devices in sorted(json.load(sys.stdin)["devices"].items(), reverse=True):
+              if "iOS" in runtime and devices:
+                  print(devices[0]["udid"])
+                  break
+          ')
+          echo "Using simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      # -skipMacroValidation / -skipPackagePluginValidation: Xcode refuses to run
+      # a package's macro or build-tool plugin until a human has trusted it, and
+      # that choice lives in local user data. CI has neither, so it must opt out.
+      # Safe here because every package is pinned to an exact revision.
+      #
       # No -sdk flag: it would force the swift-syntax macro plugin to build for
       # iOS instead of the host, which fails to resolve SwiftCompilerPlugin.
       - name: Build and test
@@ -19,5 +39,7 @@ jobs:
           xcodebuild test \
             -project LocalLLMChat.xcodeproj \
             -scheme LocalLLMChat \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-            -configuration Debug
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -configuration Debug \
+            -skipMacroValidation \
+            -skipPackagePluginValidation
