@@ -2,7 +2,7 @@ name: LocalLLMChat
 options:
   bundleIdPrefix: com.vesco
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "26.0"
 
 # Pinned to exact revisions: these packages publish no tags on `main`, and an
 # unpinned branch makes builds unreproducible.
