@@ -3,9 +3,12 @@ import SwiftUI
 struct ChatView: View {
     @EnvironmentObject private var viewModel: ChatViewModel
     @State private var inputText = ""
-    @State private var isAtBottom = true
+    @State private var bottomY: CGFloat = 0
     @State private var scrollTrigger = 0
     @State private var viewportHeight: CGFloat = 0
+
+    /// Derived from both measurements so neither preference has to arrive first.
+    private var isAtBottom: Bool { bottomY <= viewportHeight + 50 }
 
     private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -73,9 +76,7 @@ struct ChatView: View {
                 Color.clear.preference(key: ViewportHeightKey.self, value: geometry.size.height)
             })
             .onPreferenceChange(ViewportHeightKey.self) { viewportHeight = $0 }
-            .onPreferenceChange(BottomAnchorKey.self) { bottom in
-                isAtBottom = bottom <= viewportHeight + 50
-            }
+            .onPreferenceChange(BottomAnchorKey.self) { bottomY = $0 }
             .scrollDismissesKeyboard(.interactively)
             .safeAreaInset(edge: .bottom) { ChatInputView(inputText: $inputText) }
             .onChange(of: conversation.messages.count) { scrollToBottom(proxy, force: false) }

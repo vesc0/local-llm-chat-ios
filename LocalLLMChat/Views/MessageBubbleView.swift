@@ -65,10 +65,9 @@ struct MessageBubbleView: View {
 
     private func thoughtSection(_ thought: String, hasAnswer: Bool) -> some View {
         DisclosureGroup(isExpanded: $isThoughtExpanded) {
-            Text(thought)
+            MarkdownText(text: thought)
                 .font(.callout)
                 .foregroundStyle(.secondary)
-                .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } label: {
             HStack(spacing: 6) {
