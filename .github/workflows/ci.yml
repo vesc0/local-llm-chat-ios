@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      # No -sdk flag: it would force the swift-syntax macro plugin to build for
+      # iOS instead of the host, which fails to resolve SwiftCompilerPlugin.
+      - name: Build and test
+        run: |
+          xcodebuild test \
+            -project LocalLLMChat.xcodeproj \
+            -scheme LocalLLMChat \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -configuration Debug
