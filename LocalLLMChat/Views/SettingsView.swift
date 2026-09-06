@@ -5,8 +5,46 @@ struct SettingsView: View {
     @EnvironmentObject private var viewModel: ChatViewModel
     @ObservedObject private var modelManager = LocalModelManager.shared
 
-    @State private var repoId = ""
     @State private var confirmingClear = false
+    @State private var reachableModels: [String]?
+    @State private var isCheckingOllama = false
+
+    /// A model counts as active only while it can actually be used: downloaded
+    /// for MLX, served by a reachable host for Ollama. The stored selection is
+    /// never discarded, so it returns as soon as the model is available again.
+    private var activeModelIsAvailable: Bool {
+        switch viewModel.settings.engine {
+        case .mlx:
+            modelManager.downloadedModels.contains { $0.repoId == viewModel.settings.localModelName }
+        case .ollama:
+            reachableModels?.contains(viewModel.settings.selectedModel) ?? false
+        }
+    }
+
+    private var availabilityKey: String {
+        [
+            viewModel.settings.engine.rawValue,
+            viewModel.settings.ollamaHost,
+            viewModel.settings.selectedModel,
+            viewModel.settings.localModelName,
+        ].joined(separator: "|")
+    }
+
+    private func refreshAvailability() async {
+        switch viewModel.settings.engine {
+        case .mlx:
+            await modelManager.scanModels()
+        case .ollama:
+            let host = viewModel.settings.ollamaHost.trimmingCharacters(in: .whitespaces)
+            guard !host.isEmpty else {
+                reachableModels = []
+                return
+            }
+            isCheckingOllama = true
+            reachableModels = try? await OllamaService.fetchModels(host: host)
+            isCheckingOllama = false
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -20,9 +58,21 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                     .padding(.vertical, 4)
 
+                    LabeledContent("Active Model") {
+                        if isCheckingOllama {
+                            ProgressView()
+                        } else if activeModelIsAvailable, let name = viewModel.settings.activeModelName {
+                            Text(name).fontWeight(.bold).foregroundStyle(Theme.accent)
+                        } else {
+                            Text("None").fontWeight(.bold).foregroundStyle(.red)
+                        }
+                    }
+
                     switch viewModel.settings.engine {
-                    case .mlx: mlxSection
-                    case .ollama: ollamaSection
+                    case .mlx:
+                        NavigationLink("Manage Models") { MLXModelSelectionView() }
+                    case .ollama:
+                        NavigationLink("Select Ollama Model") { OllamaModelSelectionView() }
                     }
                 }
 
@@ -43,10 +93,16 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                // .confirmationAction is rendered as a standard "Done" button and
+                // ignores custom label content, so place it explicitly.
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "checkmark")
+                    }
+                    .accessibilityLabel("Done")
                 }
             }
+            .task(id: availabilityKey) { await refreshAvailability() }
             .confirmationDialog(
                 "Delete all downloaded models and cached data?",
                 isPresented: $confirmingClear,
@@ -59,69 +115,6 @@ struct SettingsView: View {
                     }
                 }
             }
-            .task { await modelManager.scanModels() }
         }
-    }
-
-    @ViewBuilder
-    private var mlxSection: some View {
-        LabeledContent("Active Model") {
-            Text(viewModel.settings.localModelName.isEmpty ? "None" : viewModel.settings.localModelName)
-                .fontWeight(.bold)
-                .foregroundStyle(Theme.accent)
-        }
-
-        TextField("Hugging Face repo id", text: $repoId)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-
-        if modelManager.isDownloading {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 12) {
-                    ProgressView(value: modelManager.downloadProgress).tint(Theme.accent)
-                    Button("Cancel download", systemImage: "xmark.circle.fill") {
-                        modelManager.cancelDownload()
-                    }
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.red)
-                    .font(.title3)
-                }
-                Text(modelManager.downloadStatus).font(.caption).foregroundStyle(.secondary)
-            }
-            .padding(.vertical, 4)
-        } else {
-            Button {
-                Task {
-                    await modelManager.download(repoId: repoId)
-                    repoId = ""
-                }
-            } label: {
-                Label("Download Repository", systemImage: "arrow.down.circle.fill")
-                    .frame(maxWidth: .infinity)
-            }
-            .disabled(repoId.trimmingCharacters(in: .whitespaces).isEmpty)
-
-            if !modelManager.downloadStatus.isEmpty {
-                Text(modelManager.downloadStatus).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-
-        NavigationLink("Manage Downloaded Models") { MLXModelSelectionView() }
-    }
-
-    @ViewBuilder
-    private var ollamaSection: some View {
-        LabeledContent("Active Model") {
-            Text(viewModel.settings.selectedModel.isEmpty ? "None" : viewModel.settings.selectedModel)
-                .fontWeight(.bold)
-                .foregroundStyle(Theme.accent)
-        }
-
-        TextField("http://192.168.1.10:11434", text: $viewModel.settings.ollamaHost)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .keyboardType(.URL)
-
-        NavigationLink("Select Ollama Model") { OllamaModelSelectionView() }
     }
 }

@@ -83,6 +83,14 @@ final class LocalModelManager: ObservableObject {
         downloadTask?.cancel()
     }
 
+    /// Drops the outcome of a finished download so it cannot resurface later
+    /// as if it had just happened.
+    func clearStatus() {
+        guard !isDownloading else { return }
+        downloadStatus = ""
+        downloadProgress = 0
+    }
+
     /// The reported count is wrong for LFS files, so real bytes on disk are measured
     /// instead — throttled and off the main actor, since it walks the download folder.
     private func sampleProgress(reported: Int64, total: Int64, destination: URL) {

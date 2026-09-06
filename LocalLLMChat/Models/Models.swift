@@ -79,6 +79,16 @@ enum InferenceEngine: String, Codable, CaseIterable, Sendable {
     case mlx = "MLX-Swift (Local)"
 }
 
+extension AppSettings {
+    /// The active model's short name, without its Hugging Face namespace.
+    /// `nil` when no model is selected.
+    var activeModelName: String? {
+        let id = engine == .mlx ? localModelName : selectedModel
+        guard !id.isEmpty else { return nil }
+        return id.components(separatedBy: "/").last
+    }
+}
+
 struct AppSettings: Codable, Equatable, Sendable {
     var ollamaHost: String = ""
     var selectedModel: String = ""
